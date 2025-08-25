@@ -1,11 +1,14 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -518,6 +521,16 @@ func (c *Checkrr) checkFile(path string) {
 				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "DB Update": "Failure"}).Warn(message)
 			}
 
+			// jefflill: Have [ffmpeg] do a deep scan of video/audio files for corruption.
+
+			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error -i '%s' -f null -", path))
+			c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Deep Scan"}).Debug(stdout)
+			if err != nil {
+
+				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Failure"}).Warn(stderr)
+				return
+			}
+
 			buf, data = nil, nil
 			return
 		}
@@ -569,6 +582,16 @@ func (c *Checkrr) checkFile(path string) {
 		c.deleteFile(path, "not recognized")
 		return
 	}
+}
+
+func Shellout(command string) (string, string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("sh", "-c", command)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
 }
 
 func (c *Checkrr) deleteFile(path string, reason string) {
