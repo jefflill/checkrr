@@ -15,3 +15,5 @@ webserver/node_modules
 .idea/
 .devenv.flake.nix
 /checkrr.log.json
+*.exe
+/.vs
