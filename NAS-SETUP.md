@@ -123,6 +123,28 @@ original UGREEN OS counts as one).
 
     I also configured the trays to display text as white.
 
+17. Install **NoIP** app:
+
+    a. Enable **AUTOSTART**
+
+    b. **NoIP** will create a config file at:
+
+       **/mnt/user/appdata/NoIp/noip.conf** to look like:
+       ```
+       USERNAME='your login'
+       PASSWORD='your password'
+       DOMAINS='your domains (coma separated)'
+       INTERVAL=30m
+       ```
+
+       NOTE: There should be no space between the interval
+             amount and the trailing unit character.
+
+    c. Edit the config file to add your noip.com credentials
+       and host name.
+
+    d. Restart the **NoIP** app.
+
 NOTE: I was able to get hardware acceleration going in the scan
       on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
       than just using the CPU, so this is disabled by default.
