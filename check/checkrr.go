@@ -521,15 +521,31 @@ func (c *Checkrr) checkFile(path string) {
 				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "DB Update": "Failure"}).Warn(message)
 			}
 
+			//----------------------------------------------------------------------------
 			// jefflill: Have [ffmpeg] do a deep scan of video/audio files for corruption.
+			//
+			// I experimented with hardware acceleration on the UGREEN box using vaapi
+			// and it used the GPU, but that was actually 3THREE TIMES SLOWER!  Here's
+			// and example command for that:
+			//
+			// 		ffmpeg -v error -hwaccel vaapi -i test.mp4 -f null -
+			//
+			// So, I'm going to disable HW acceleration by default.  To enable it,
+			// pass the ffmpeg **hwaccel** argument as an environment variable like:
+			//
+			// 		HW_ACCEL_ARG=-hwaccel vaapi
 
-			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error -i '%s' -f null -", path))
+			hwaccellArg := os.Getenv("HW_ACCEL_ARG")
+
+			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error %s -i '%s' -f null -", hwaccellArg, path))
 			c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Deep Scan"}).Debug(stdout)
 			if err != nil {
 
 				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Failure"}).Warn(stderr)
 				return
 			}
+
+			//----------------------------------------------------------------------------
 
 			buf, data = nil, nil
 			return
