@@ -114,6 +114,51 @@ original UGREEN OS counts as one).
        iv. Add the device mapping: **/dev/dri:/dev/dri** and name
            it **Devices**.
 
+      Here's my config file on the host NAS at:
+      **//mnt/main-storage/appdata/checkrr/config/checkrr.yaml**
+      ```
+      lang: "en-us"
+      checkrr:
+      checkpath: 
+         - "/media/movie/"
+         - "/media/music/"
+         - "/media/new/"
+         - "/media/tv/"
+         # - /media/test
+      database: /etc/checkrr/checkrr.db
+      debug: false
+      csvfile: "/etc/checkrr/badfiles.csv"
+      cron: "@daily"
+      ignorehidden: true
+      requireaudio: true
+      ignorepaths:
+      removevideo:
+      removelang:
+      removeaudio:
+      ignoreexts:
+         - .txt
+         - .nfo
+         - .nzb
+         - .url
+         - .ini
+         - .db
+         - .lnk
+         - .nra
+      webserver:
+      port: 8585
+      tls: false
+      certs:
+         cert: "/path/to/cert.pem"
+         key: "/path/to/privkey.pem"
+      baseurl: "/"
+      trustedproxies:
+         - 127.0.0.1
+      logs:
+      stdout:
+         out: stdout
+         formatter: default
+      ```
+
 16. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
