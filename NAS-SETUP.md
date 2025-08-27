@@ -117,8 +117,9 @@ original UGREEN OS counts as one).
 16. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
-    first row displaying the Nvme cache drives and the
-    second row displaying the spinning drives.
+    first row displaying the spinning drives (so the drive
+    numbers will match the external trays) and the second
+    row displaying the Nvme cache drives.
 
     I also configured the trays to display text as white.
 
