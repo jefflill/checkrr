@@ -84,12 +84,13 @@ original UGREEN OS counts as one).
           shares like [data].  Make the shares **read-only**.
 
     ```
-    /mnt/user/appdata/binhex-plex --> /config
-    /mnt/main-storage/music       --> /mnt/main-storage/music
-    /mnt/main-storage/movie       --> /mnt/main-storage/movie
-    /mnt/main-storage/new         --> /mnt/main-storage/new
-    /mnt/main-storage/photos      --> /mnt/main-storage/photos
-    /mnt/main-storage/tv          --> /mnt/main-storage/tv
+    /mnt/user/appdata/binhex-plex   --> /config
+    /mnt/main-storage/music         --> /mnt/main-storage/music
+    /mnt/main-storage/movie         --> /mnt/main-storage/movie
+    /mnt/main-storage/new           --> /mnt/main-storage/new
+    /mnt/main-storage/photos        --> /mnt/main-storage/photos
+    /mnt/main-storage/tv            --> /mnt/main-storage/tv
+    /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture
     ```
 
     Configure **Plex Docker container** to **AUTOSTART**
