@@ -35,45 +35,48 @@ original UGREEN OS counts as one).
    process of applying your UNRAID license and setting
    the root password.
 
-5. Configure the 2 Nvme cards as a **Btrfs RAID1** pool
+6. In the WebUI, goto **SETTINGS/IDENTIFICATION** and update]
+   the server name as required
+
+7. Configure the 2 Nvme cards as a **Btrfs RAID1** pool
    named **cache**
 
-6. Configure the 4 drives as a **ZFS** pool named **main-storage**
+8. Configure the 4 drives as a **ZFS** pool named **main-storage**
 
-7. Create a user account (e.g. "jeff") with password
+9. Create a user account (e.g. "jeff") with password
 
-8. Configure the desired shares on **main-storage**:
+10. Configure the desired shares on **main-storage**:
 
-   a. Set primary storage as **Cache**
-   b. Minimum free space to **50MB** or maybe double the size
-      of the largest file you'll be writing to the share
-   c. Set secondary storage as **main-storage**
-   d. Mover action: **Cache --> Main-storage**
-   e. Export: **yes** (as required)
-   d. Security: **secure** when exporting (couldn't get
+    a. Set primary storage as **Cache**
+    b. Minimum free space to **50MB** or maybe double the size
+       of the largest file you'll be writing to the share
+    c. Set secondary storage as **main-storage**
+    d. Mover action: **Cache --> Main-storage**
+    e. Export: **yes** (as required)
+    d. Security: **secure** when exporting (couldn't get
       **public** to work from Windows
-   e. Grant your user account **R/W access**
+    e. Grant your user account **R/W access**
 
-9. Click on the top **Main-storage** link on the Dashboard or 
-   Main page and configure weekly **SCRUB**  for Sunday 4am.
+11. Click on the top **Main-storage** link on the **DASHBOARD**** or 
+    **MAIN**** page and configure weekly **SCRUB**  for Sunday 4am.
 
-10. Install **Community Applications** app
+12. Install **Community Applications** app
 
-11. Install **Unraid Connect** app and then configure your
+13. Install **Unraid Connect** app and then configure your
     **connect.myunraid.net** account to backup your USB
     drive.  Configure it to **AUTOSTART**.
 
-12. Install **Intel GPU TOP** plugin (used for debugging
+14. Install **Intel GPU TOP** plugin (used for debugging
     custom **checkrr** GPU settings.
 
-13. Create alias Bash scripts in **/usr/bin** for:
+15. Create alias Bash scripts in **/usr/bin** for:
     
     ```
     gpu-top --> intel_gpu_top "$@"
     ll      --> ls -lh "$@"
     ```
 
-14. Install **binhex-plex** app, with these host to container
+16. Install **binhex-plex** app, with these host to container
     mappings.
     
     NOTE: We only want to map the media folders for security.
@@ -94,7 +97,7 @@ original UGREEN OS counts as one).
     Use Plex UI to create your libraries off of the local
     **/main-storage/*** folders and configure other settings.
 
-15. **Settings:**
+17. **Settings:**
 
     a. (APC) **UPS Settings:** configure as required
     b. **Disk Settings:** Default spin down delay **never**
@@ -104,7 +107,7 @@ original UGREEN OS counts as one).
        Trim schedule=**disabled**
     f. **Power mode:** **Best performance**
 
-16. Install my customized **checkrr** app from 
+18. Install my customized **checkrr** app from 
     https://github.com/jefflill/checkrr and 
     **ghcr.io/jefflill/checkrr:latest**.  This version
     uses **ffmpeg** to fully scan media files for
@@ -173,7 +176,7 @@ original UGREEN OS counts as one).
           formatter: default
       ```
 
-17. Install the **Disk Location** app and then goto 
+19. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
     first row displaying the spinning drives (so the drive
@@ -182,7 +185,7 @@ original UGREEN OS counts as one).
 
     I also configured the trays to display text as white.
 
-18. Install **NoIP** app:
+20. Install **NoIP** app:
 
     a. Enable **AUTOSTART**
 
@@ -204,7 +207,7 @@ original UGREEN OS counts as one).
 
     d. Restart the **NoIP** app.
 
-19. Install the **User Scripts** and **Enhanced User Scripts** plugins.
+21. Install the **User Scripts** and **Enhanced User Scripts** plugins.
 
 NOTE: I was able to get hardware acceleration going in the scan
       on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
