@@ -213,7 +213,9 @@ NOTE: I was able to get hardware acceleration going in the scan
       on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
       than just using the CPU, so this is disabled by default.
 
-      You can manually enable HW acceleration by adding this 
-      environment variable to the **checkrr-jeff** Docker template:
+      You can enable HW acceleration by uncommeting this line
+      in the [checkrr.yaml] config file.
 
-      HW_ACCEL_ARG=-hwaccel vaapi
+      # ffmpegArgs: "-hwaccel vaapi"
+
+22. Configure the **video-capture** user and share.
