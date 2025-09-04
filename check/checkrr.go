@@ -33,6 +33,7 @@ type Checkrr struct {
 	Stats         features.Stats
 	DB            *bolt.DB
 	Running       bool
+	ffmpegArgs	  string			# jefflill: used for GPU related args
 	csv           features.CSV
 	notifications notifications.Notifications
 	sonarr        []connections.Sonarr
@@ -91,6 +92,8 @@ func (c *Checkrr) Run() {
 	c.removeLang = c.config.Strings("removelang")
 	c.ignoreHidden = c.config.Bool("ignorehidden")
 	c.requireAudio = c.config.Bool("requireaudio")
+
+	c.ffmpegArgs = c.config.String("ffmpegArgs")	# jefflill: added this to config
 
 	// I'm tired of waiting for filetype to support this. We'll force it by adding to the matchers on the fly.
 	// TODO: if h2non/filetype#120 ever gets completed, remove this logic
@@ -525,19 +528,17 @@ func (c *Checkrr) checkFile(path string) {
 			// jefflill: Have [ffmpeg] do a deep scan of video/audio files for corruption.
 			//
 			// I experimented with hardware acceleration on the UGREEN box using vaapi
-			// and it used the GPU, but that was actually 3THREE TIMES SLOWER!  Here's
+			// and it used the GPU, but that was actually THREE TIMES SLOWER!  Here's
 			// and example command for that:
 			//
 			// 		ffmpeg -v error -hwaccel vaapi -i test.mp4 -f null -
 			//
 			// So, I'm going to disable HW acceleration by default.  To enable it,
-			// pass the ffmpeg **hwaccel** argument as an environment variable like:
+			// set [ffmpegArgs] in the configuration like:
 			//
-			// 		HW_ACCEL_ARG=-hwaccel vaapi
+			// 		ffmpegArgs: "-hwaccel vaapi"
 
-			hwaccellArg := os.Getenv("HW_ACCEL_ARG")
-
-			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error %s -i '%s' -f null -", hwaccellArg, path))
+			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error %s -i '%s' -f null -",  c.ffmpegArgs, path))
 			c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Deep Scan"}).Debug(stdout)
 			if err != nil {
 
