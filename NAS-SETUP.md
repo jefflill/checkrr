@@ -40,9 +40,9 @@ original UGREEN OS counts as one).
 
 6. Configure the 4 drives as a **ZFS** pool named **main-storage**
 
-6. Create a user account (e.g. "jeff") with password
+7. Create a user account (e.g. "jeff") with password
 
-7. Configure the desired shares on **main-storage**:
+8. Configure the desired shares on **main-storage**:
 
    a. Set primary storage as **Cache**
    b. Minimum free space to **50MB** or maybe double the size
@@ -54,34 +54,47 @@ original UGREEN OS counts as one).
       **public** to work from Windows
    e. Grant your user account **R/W access**
 
-8. Install **Community Applications** app
+9. Click on the top **Main-storage** link on the Dashboard or 
+   Main page and configure weekly **SCRUB**  for Sunday 4am.
 
-9. Install **Unraid Connect** app and then configure your
-   **connect.myunraid.net** account to backup your USB
-   drive.  Configure it to **AUTOSTART**.
+10. Install **Community Applications** app
 
-10. Install **Intel GPU TOP** plugin (used for debugging
+11. Install **Unraid Connect** app and then configure your
+    **connect.myunraid.net** account to backup your USB
+    drive.  Configure it to **AUTOSTART**.
+
+12. Install **Intel GPU TOP** plugin (used for debugging
     custom **checkrr** GPU settings.
 
-11. Create alias Bash scripts in **/usr/bin** for:
-    
-    gpu-top --> intel_gpu_top "$@"
-    ll      --> ls -lh "$@"
-
-13. Install **binhex-plex** app, with these host to container
-    mappings:
+13. Create alias Bash scripts in **/usr/bin** for:
     
     ```
+    gpu-top --> intel_gpu_top "$@"
+    ll      --> ls -lh "$@"
+    ```
+
+14. Install **binhex-plex** app, with these host to container
+    mappings.
+    
+    NOTE: We only want to map the media folders for security.
+          There's no reason to give Plex access to non-media
+          shares like [data].  Make the shares **read-only**.
+
+    ```
     /mnt/user/appdata/binhex-plex --> /config
-    /mnt/main-storage             --> /main-storage
+    /mnt/main-storage/music       --> /mnt/main-storage/music
+    /mnt/main-storage/movie       --> /mnt/main-storage/movie
+    /mnt/main-storage/new         --> /mnt/main-storage/new
+    /mnt/main-storage/photos      --> /mnt/main-storage/photos
+    /mnt/main-storage/tv          --> /mnt/main-storage/tv
     ```
 
     Configure **Plex Docker container** to **AUTOSTART**
     
     Use Plex UI to create your libraries off of the local
-    **/main-storage** and configure other settings.
+    **/main-storage/*** folders and configure other settings.
 
-14. **Settings:**
+15. **Settings:**
 
     a. (APC) **UPS Settings:** configure as required
     b. **Disk Settings:** Default spin down delay **never**
@@ -91,7 +104,7 @@ original UGREEN OS counts as one).
        Trim schedule=**disabled**
     f. **Power mode:** **Best performance**
 
-15. Install my customized **checkrr** app from 
+16. Install my customized **checkrr** app from 
     https://github.com/jefflill/checkrr and 
     **ghcr.io/jefflill/checkrr:latest**.  This version
     uses **ffmpeg** to fully scan media files for
@@ -115,20 +128,21 @@ original UGREEN OS counts as one).
            it **Devices**.
 
       Here's my config file on the host NAS at:
-      **//mnt/main-storage/appdata/checkrr/config/checkrr.yaml**
+      **/mnt/main-storage/appdata/checkrr/config/checkrr.yaml**
       ```
       lang: "en-us"
       checkrr:
       checkpath: 
-         - "/media/movie/"
-         - "/media/music/"
-         - "/media/new/"
-         - "/media/tv/"
-         # - /media/test
+        - "/media/movie/"
+        - "/media/music/"
+        - "/media/new/"
+        - "/media/test"
+        - "/media/tv/"
       database: /etc/checkrr/checkrr.db
       debug: false
       csvfile: "/etc/checkrr/badfiles.csv"
       cron: "@daily"
+      # ffmpegArgs: "-hwaccel vaapi"
       ignorehidden: true
       requireaudio: true
       ignorepaths:
@@ -136,30 +150,30 @@ original UGREEN OS counts as one).
       removelang:
       removeaudio:
       ignoreexts:
-         - .txt
-         - .nfo
-         - .nzb
-         - .url
-         - .ini
-         - .db
-         - .lnk
-         - .nra
+        - .txt
+        - .nfo
+        - .nzb
+        - .url
+        - .ini
+        - .db
+        - .lnk
+        - .nra
       webserver:
-      port: 8585
-      tls: false
-      certs:
-         cert: "/path/to/cert.pem"
-         key: "/path/to/privkey.pem"
+        port: 8585
+        tls: false
+        certs:
+          cert: "/path/to/cert.pem"
+          key: "/path/to/privkey.pem"
       baseurl: "/"
       trustedproxies:
-         - 127.0.0.1
+        - 127.0.0.1
       logs:
-      stdout:
-         out: stdout
-         formatter: default
+        stdout:
+          out: stdout
+          formatter: default
       ```
 
-16. Install the **Disk Location** app and then goto 
+17. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
     first row displaying the spinning drives (so the drive
@@ -168,7 +182,7 @@ original UGREEN OS counts as one).
 
     I also configured the trays to display text as white.
 
-17. Install **NoIP** app:
+18. Install **NoIP** app:
 
     a. Enable **AUTOSTART**
 
@@ -189,6 +203,8 @@ original UGREEN OS counts as one).
        and host name.
 
     d. Restart the **NoIP** app.
+
+19. Install the **User Scripts** and **Enhanced User Scripts** plugins.
 
 NOTE: I was able to get hardware acceleration going in the scan
       on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER

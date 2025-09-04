@@ -93,7 +93,7 @@ func (c *Checkrr) Run() {
 	c.ignoreHidden = c.config.Bool("ignorehidden")
 	c.requireAudio = c.config.Bool("requireaudio")
 
-	c.ffmpegArgs = c.config.String("ffmpegArgs")	# jefflill: added this to config
+	c.ffmpegArgs = c.config.String("ffmpegArgs")	# jefflill: added to config
 
 	// I'm tired of waiting for filetype to support this. We'll force it by adding to the matchers on the fly.
 	// TODO: if h2non/filetype#120 ever gets completed, remove this logic
