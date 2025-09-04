@@ -10,6 +10,7 @@ checkrr:
   debug: true
   csvfile: "./badfiles.csv"
   cron: "@daily"
+  # ffmpegArgs: "-hwaccel vaapi"
   ignorehidden: true
   requireaudio: true
   ignorepaths:
