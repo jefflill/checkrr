@@ -53,8 +53,7 @@ original UGREEN OS counts as one).
     c. Set secondary storage as **main-storage**
     d. Mover action: **Cache --> Main-storage**
     e. Export: **yes** (as required)
-    d. Security: **secure** when exporting (couldn't get
-      **public** to work from Windows
+    d. Security: **private** when exporting
     e. Grant your user account **R/W access**
 
 11. Click on the top **Main-storage** link on the **DASHBOARD**** or 
