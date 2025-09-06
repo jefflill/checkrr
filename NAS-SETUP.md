@@ -106,8 +106,27 @@ original UGREEN OS counts as one).
     e. **Schedule Settings:** Mover schedule=**hourly**,
        Trim schedule=**disabled**
     f. **Power mode:** **Best performance**
+    
+18. Configure static IP
+ 
+    a. Shutdown NAS
+    b. Remove boot USB and insert it into a desktop PC
+    c. Edit the **\config\network.cfg** file like:
+       ```
+       # Generated network settings
+       USE_DHCP="no"
+       IPADDR=10.0.0.5
+       NETMASK=255.255.0.0
+       GATEWAY=10.0.0.1
+       BONDING="yes"
+       BRIDGING="yes"
+       ```
+    d. Put USB back into the NAS and restart
+     
+19. I configured **nas.lill.io** DNS to point to the static
+    address so I can manage it with my phone on the local network.
 
-18. Install my customized **checkrr** app from 
+20. Install my customized **checkrr** app from 
     https://github.com/jefflill/checkrr and 
     **ghcr.io/jefflill/checkrr:latest**.  This version
     uses **ffmpeg** to fully scan media files for
@@ -176,7 +195,7 @@ original UGREEN OS counts as one).
           formatter: default
       ```
 
-19. Install the **Disk Location** app and then goto 
+21. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
     first row displaying the spinning drives (so the drive
@@ -185,7 +204,7 @@ original UGREEN OS counts as one).
 
     I also configured the trays to display text as white.
 
-20. Install **NoIP** app:
+22. Install **NoIP** app:
 
     a. Enable **AUTOSTART**
 
@@ -207,7 +226,7 @@ original UGREEN OS counts as one).
 
     d. Restart the **NoIP** app.
 
-21. Install the **User Scripts** and **Enhanced User Scripts** plugins.
+23. Install the **User Scripts** and **Enhanced User Scripts** plugins.
 
 NOTE: I was able to get hardware acceleration going in the scan
       on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
@@ -218,4 +237,5 @@ NOTE: I was able to get hardware acceleration going in the scan
 
       # ffmpegArgs: "-hwaccel vaapi"
 
-22. Configure the **video-capture** user and share.
+24. Configure the **video-capture** user and share.
+
