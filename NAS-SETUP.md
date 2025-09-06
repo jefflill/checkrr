@@ -109,19 +109,10 @@ original UGREEN OS counts as one).
     
 18. Configure static IP
  
-    a. Shutdown NAS
-    b. Remove boot USB and insert it into a desktop PC
-    c. Edit the **\config\network.cfg** file like:
-       ```
-       # Generated network settings
-       USE_DHCP="no"
-       IPADDR=10.0.0.5
-       NETMASK=255.255.0.0
-       GATEWAY=10.0.0.1
-       BONDING="yes"
-       BRIDGING="yes"
-       ```
-    d. Put USB back into the NAS and restart
+    a. Goto Network Settings
+    b. Configure the IP address, gateway, subnet mask and DNS
+       (8.8.8.8 and 8.8.4.4)
+    d. Reboot NAS
      
 19. I configured **nas.lill.io** DNS to point to the static
     address so I can manage it with my phone on the local network.
