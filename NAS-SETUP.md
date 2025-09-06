@@ -80,16 +80,17 @@ original UGREEN OS counts as one).
     
     NOTE: We only want to map the media folders for security.
           There's no reason to give Plex access to non-media
-          shares like [data].  Make the shares **read-only**.
+          shares like [data].
 
     ```
-    /mnt/user/appdata/binhex-plex   --> /config
-    /mnt/main-storage/music         --> /mnt/main-storage/music
-    /mnt/main-storage/movie         --> /mnt/main-storage/movie
-    /mnt/main-storage/new           --> /mnt/main-storage/new
-    /mnt/main-storage/photos        --> /mnt/main-storage/photos
-    /mnt/main-storage/tv            --> /mnt/main-storage/tv
-    /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture
+    /mnt/user/appdata/binhex-plex   --> /config                             (read/write)
+    /mnt/main-storage/music         --> /mnt/main-storage/music             (read-only)
+    /mnt/main-storage/movie         --> /mnt/main-storage/movie             (read-only)
+    /mnt/main-storage/new           --> /mnt/main-storage/new               (read-only)
+    /mnt/main-storage/photos        --> /mnt/main-storage/photos            (read-only)
+    /mnt/main-storage/test          --> /mnt/main-storage/test              (read-only)
+    /mnt/main-storage/tv            --> /mnt/main-storage/tv                (read-only)
+    /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture     (read-only)
     ```
 
     Configure **Plex Docker container** to **AUTOSTART**
@@ -126,15 +127,18 @@ original UGREEN OS counts as one).
     a. Install the **checkrr** app and configure it to **AUTOSTART**
     b. Go to the **Docker** tab and edit **checkrr**
 
-       i. Change **Name** to **checkrr-jeff** to indicate
-          that this is the customized version
+       i. Change the **repository** to **ghcr.io/jefflill/checkrr:latest**
 
-       ii. Change the **repository** to **ghcr.io/jefflill/checkrr:latest**
-
-       iii. Configure Docker host/container path mappings:
+       ii. Configure Docker host/container path mappings.
        ```
-       /mnt/user/appdata/checkrr/config/ --> /etc/checkrr/
-       /mnt/main-storage                 --> /media/
+       /mnt/user/appdata/binhex-plex   --> /config                              (read/write)
+       /mnt/main-storage/music         --> /mnt/main-storage/music              (read-only)
+       /mnt/main-storage/movie         --> /mnt/main-storage/movie              (read-only)
+       /mnt/main-storage/new           --> /mnt/main-storage/new                (read-only)
+       /mnt/main-storage/photos        --> /mnt/main-storage/photos             (read-only)
+       /mnt/main-storage/test          --> /mnt/main-storage/test               (read-only)
+       /mnt/main-storage/tv            --> /mnt/main-storage/tv                 (read-only)
+       /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture      (read-only)
        ```
 
        iv. Add the device mapping: **/dev/dri:/dev/dri** and name
