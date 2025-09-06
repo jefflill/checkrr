@@ -153,7 +153,7 @@ original UGREEN OS counts as one).
         - "/media/movie/"
         - "/media/music/"
         - "/media/new/"
-        - "/media/test"
+        # - "/media/test"
         - "/media/tv/"
       database: /etc/checkrr/checkrr.db
       debug: false
