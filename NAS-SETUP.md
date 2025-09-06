@@ -131,7 +131,9 @@ original UGREEN OS counts as one).
 
        ii. Configure Docker host/container path mappings.
        ```
+       /mnt/main-storage/no-media      --> /no-media                            (read-only)
        /mnt/user/appdata/binhex-plex   --> /config                              (read/write)
+     
        /mnt/main-storage/music         --> /mnt/main-storage/music              (read-only)
        /mnt/main-storage/movie         --> /mnt/main-storage/movie              (read-only)
        /mnt/main-storage/new           --> /mnt/main-storage/new                (read-only)
@@ -140,6 +142,9 @@ original UGREEN OS counts as one).
        /mnt/main-storage/tv            --> /mnt/main-storage/tv                 (read-only)
        /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture      (read-only)
        ```
+     
+       **NOTE:** The **no-media** mapping is not actually scraped, we need this so that
+                 **checkrr** won't have access to all of the shares.
 
        iv. Add the device mapping: **/dev/dri:/dev/dri** and name
            it **Devices**.
