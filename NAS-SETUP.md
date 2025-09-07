@@ -239,3 +239,38 @@ NOTE: I was able to get hardware acceleration going in the scan
 
 24. Configure the **video-capture** user and share.
 
+25. Wireguard setup: https://docs.unraid.net/unraid-os/manual/security/vpn/
+ 
+    a. **NOTE:** I have **NoIP.com** dynamic DNS service configured 
+       with a **lill-home.ddns.net** **A** record that will map to
+       my home's IP address.
+    
+    b. Add a **CNAME** record to GoDaddy that maps:
+     
+       ```
+       CNAME: home.lill.io --> home.lill.io
+       ``` 
+     
+    c. Follow the instructions in the link above:
+    
+       * Peer access: Remote access to server
+       * Generate server public/private keys
+       * Local endpoint: **home.lill.io:51820**
+       * Add peer and generate peer public/private and shared keys
+       * Save keys and network endpoint info to 1Password
+       * Click the eyeball icon for the new peer, take a snapshot
+         of the configuration and save it to 1Password
+       * Make the new tunnel **ACTIVE** and enable **AUTOSTART**
+       * Install Wireguard app on iPhone and then snap the QRCode 
+         in the app to configure Wireguard peer.
+
+         **NOTE:** 
+         Xfinity routers don't support loopback so you'll 
+         need to temporarily disable WiFi on the iPhone
+         for this to work.
+     
+26. After configuring everything, I relocated the boot USB drive
+    to a USB 2.0 port to free up the USB 3.2 port for a backup
+    drive and I've heard this might make the USB drive more
+    reliable.
+ 
