@@ -158,6 +158,7 @@ original UGREEN OS counts as one).
         - "/media/movie/"
         - "/media/music/"
         - "/media/new/"
+        # - "/media/photos"
         # - "/media/test"
         - "/media/tv/"
       database: /etc/checkrr/checkrr.db
@@ -179,9 +180,6 @@ original UGREEN OS counts as one).
         - .ini
         - .db
         - .lnk
-        - .nra
-        - .DB1
-        - .DB2
       webserver:
         port: 8585
         tls: false
