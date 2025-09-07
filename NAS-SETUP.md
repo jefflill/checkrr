@@ -83,14 +83,13 @@ original UGREEN OS counts as one).
           shares like [data].
 
     ```
-    /mnt/user/appdata/binhex-plex   --> /config                             (read/write)
-    /mnt/main-storage/music         --> /mnt/main-storage/music             (read-only)
-    /mnt/main-storage/movie         --> /mnt/main-storage/movie             (read-only)
-    /mnt/main-storage/new           --> /mnt/main-storage/new               (read-only)
-    /mnt/main-storage/photos        --> /mnt/main-storage/photos            (read-only)
-    /mnt/main-storage/test          --> /mnt/main-storage/test              (read-only)
-    /mnt/main-storage/tv            --> /mnt/main-storage/tv                (read-only)
-    /mnt/main-storage/video-capture --> /mnt/main-storage/video-capture     (read-only)
+    /mnt/user/appdata/binhex-plex --> /config       (read/write)
+    /mnt/main-storage/music       --> /media/music  (read-only)
+    /mnt/main-storage/movie       --> /media/movie  (read-only)
+    /mnt/main-storage/new         --> /media/new    (read-only)
+    /mnt/main-storage/photos      --> /media/photos (read-only)
+    /mnt/main-storage/test        --> /media/test   (read-only)
+    /mnt/main-storage/tv          --> /media/tv     (read-only)
     ```
 
     Configure **Plex Docker container** to **AUTOSTART**
