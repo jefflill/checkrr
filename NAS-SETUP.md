@@ -268,8 +268,22 @@ NOTE: I was able to get hardware acceleration going in the scan
          Xfinity routers don't support loopback so you'll 
          need to temporarily disable WiFi on the iPhone
          for this to work.
+
+26. Configure Plex pass GPU pass-thru:
+
+    https://www.reddit.com/r/UgreenNASync/comments/1dn5c1q/gpu_passthrough_working_on_plex/
+
+    * Install **PortainerCE** app (configure **AUTOSTART** on)
+
+    **NOTE:** 
+    Plex pass only supports Nvideo GPUs and the UGREEN box only has 
+    a low-power Intel CPU integrated GPU.  So, this won't work without
+    an upgrade.
+ 
+    I went aheade and installed **PortainerCE** anyway since it
+    looks useful.
      
-26. After configuring everything, I relocated the boot USB drive
+27. After configuring everything, I relocated the boot USB drive
     to a USB 2.0 port to free up the USB 3.2 port for a backup
     drive and I've heard this might make the USB drive more
     reliable.
