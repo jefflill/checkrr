@@ -180,6 +180,8 @@ original UGREEN OS counts as one).
         - .db
         - .lnk
         - .nra
+        - .DB1
+        - .DB2
       webserver:
         port: 8585
         tls: false
