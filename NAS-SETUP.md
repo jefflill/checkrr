@@ -85,7 +85,7 @@ original UGREEN OS counts as one).
     ```
     /mnt/user/appdata/binhex-plex --> /config        (read/write)
     /mnt/main-storage/music       --> /media/music   (read-only)
-    /mnt/main-storage/movie       --> /media/movie   (read-only)
+    /mnt/main-storage/movies      --> /media/movies   (read-only)
     /mnt/main-storage/new         --> /media/new     (read-only)
     /mnt/main-storage/photos      --> /media/photos  (read-only)
     /mnt/main-storage/test        --> /media/test    (read-only)
@@ -96,7 +96,7 @@ original UGREEN OS counts as one).
     Configure **Plex Docker container** to **AUTOSTART**
     
     Use Plex UI to create your libraries off of the local
-    **/main-storage/*** folders and configure other settings.
+    **/main-storage/*** folders and configure other settings.        
 
 17. **Settings:**
 
@@ -131,12 +131,12 @@ original UGREEN OS counts as one).
 
        ii. Configure Docker host/container path mappings.
        ```
-       /mnt/main-storage/no-media      --> /no-media                            (read-only)
-       /mnt/user/appdata/binhex-plex   --> /config                              (read/write)
+       /mnt/main-storage/appdata/binhex-plex/Plex Media Server/ --> /config     (read/write)
      
        /mnt/main-storage/music         --> /mnt/main-storage/music              (read-only)
-       /mnt/main-storage/movie         --> /mnt/main-storage/movie              (read-only)
+       /mnt/main-storage/movies        --> /mnt/main-storage/movies             (read-only)
        /mnt/main-storage/new           --> /mnt/main-storage/new                (read-only)
+       /mnt/main-storage/no-media      --> /no-media                            (read-only)
        /mnt/main-storage/photos        --> /mnt/main-storage/photos             (read-only)
        /mnt/main-storage/test          --> /mnt/main-storage/test               (read-only)
        /mnt/main-storage/tv            --> /mnt/main-storage/tv                 (read-only)
@@ -283,8 +283,59 @@ NOTE: I was able to get hardware acceleration going in the scan
  
     I went aheade and installed **PortainerCE** anyway since it
     looks useful.
+
+27. Many of the apps are configured to keep their logs and other stuff 
+    on the cache drive which is is running **btrfs** on the **Nvme** 
+    drives.  This is a problem because **btrfs** is a **copy on write** 
+    file system which will result in a lot of SSD wear (write amplification).
+    The directory for this data is:
+
+    ```
+    /mnt/user/appdata
+    ```
+ 
+    This also keeps all of the app configuration on the **main-storage**
+    array, so we should be able to just migrate to a new server by just
+    moving the hard drives (since this is ZFS).
+ 
+    Stop all apps, then for each app, you'll need to:
+ 
+    a. Run the **Mover** to clear any transient files from the cache.
+    
+    b. Backup the **/mnt/user/appdata** folder to a temporary folder at
+       **/mnt/main-storage/appdata-backup** for copying and just in case 
+       we need to restore something.
+    
+       ```
+       mkdir /mnt/main-storage/appdata-backup
+       cp -r /mnt/user/appdata /mnt/main-storage/appdata-backup
+       ```
+    
+    c. Copy the folders for the app from **/mnt/cache/appdata/APP-FOLDER**
+       to **/mnt/main-storage/APP-FOLDER**
+    
+       **NOTE:** It's important that you **COPY** and not **MOVE**.  I
+                 do this by copying from the backup folder.
+
+       https://docs.unraid.net/unraid-os/manual/shares/user-shares/
+    
+       ```
+       rm -r /mnt/user/appdata/APP-NAME
+       cp -r /mnt/main-storage/appdata-backup/appdata/APP-FOLDER /mnt/main-storage/appdata/APP-FOLDER
+       ```
+        
+    d. You may need to adjust the app's Docker host path mappings.
+
+    e. Restart the app, check its logs, and verify that it's working.
      
-27. After configuring everything, I relocated the boot USB drive
+    After confirming that all of the apps work, you should remove the 
+    **appdata-backup** folder:
+
+    ```
+    rm -r /mnt/main-storage/appdata-backup
+    ```
+     
+28. After configuring everything, I relocated the boot USB drive
     to a USB 2.0 port to free up the USB 3.2 port for a backup
     drive and I've heard this might make the USB drive more
     reliable.
