@@ -107,6 +107,9 @@ original UGREEN OS counts as one).
     e. **Schedule Settings:** Mover schedule=**hourly**,
        Trim schedule=**disabled**
     f. **Power mode:** **Best performance**
+    g. **Library:** Configure scanning schedule and generate
+       preview thumbnails, chapter thumbnails, loudness,
+       and markers.
     
 18. Configure static IP
  
