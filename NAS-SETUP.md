@@ -180,6 +180,7 @@ original UGREEN OS counts as one).
         - .ini
         - .db
         - .lnk
+        - .nra
       webserver:
         port: 8585
         tls: false
