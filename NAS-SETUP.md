@@ -407,15 +407,19 @@ https://forums.unraid.net/profile/1033-pauven/
 ```
 #!/bin/bash
 echo "====================================================================="
-echo "UGREEN-NAS Backup Script"
+echo "FILE:        nas-backup"
+echo "DESCRIPTION: UNRAID NAS Backup Script"
+echo
+echo "    USAGE: nas-backup        - KEEPS extraneous files in backup set"
+echi "           nas-backup clean  - REMOVES extraneous files from backup set"
 echo 
-echo " REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
-echo "           on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
-echo "           BACKUP-0 and BACKUP-1."
+echo "    REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
+echo "              on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
+echo "              BACKUP-0 and BACKUP-1."
 echo
-echo "           [mergerFS for UNRAID] must be installed on the NAS."
+echo "              [mergerFS for UNRAID] must be installed on the NAS."
 echo
-echo "           Stop all apps that access [main-storage]"
+echo "              Stop all apps that access [main-storage]"
 echo 
 echo " Press ENTER to proceed with the backup or CTRL-C to cancel..."
 echo 
@@ -431,10 +435,12 @@ if ! which mergerfs > /dev/null 2>&1 ; then
     exit 1
 fi
 
-# Make sure the apps that directly access [main-storage] are stopped.
+# Make sure the apps manage data at [/mnt/user] are stopped.
 
-echo "Stopping storage apps..."
-docker stop checkrr info plex
+dataApps=checkrr info plex
+
+echo "Stopping apps..."
+docker stop $dataApps
 
 # Use [blkid] to list the attached block devices, looking for the BACKUP#-#
 # drive labels and extract the device path at the beginning of the lines.
@@ -488,7 +494,7 @@ fi
 #
 # Useful Options:
 #
-#   --delete-during     - delete extraneous files from target
+#   --delete-during     - delete extraneous files from backup set
 #   --recursive         - copy subfolders too
 #   --force             - force deletion of dirs even if not empty
 #   --times             - preserve file modification times
@@ -496,16 +502,36 @@ fi
 # This is safer to use most of the time because it'll keep files
 # on the backup even when they no longer exist on the source.
 
-rsync --recursive --times /mnt/user/ /mnt/backup/
+if [[ "$1" == "clean" ]; then
+    # Use this occasionally to clear extranious files and folders
+    # from the backup.
 
-# Use this occasionally to clear extranious files and folders
-# from the backup.
+    if ! rsync --delete-during --force ---recursive --times /mnt/user/ /mnt/backup/
+        echo
+        echo "*** ERROR: Backup failed"
+        echo
+        exit 1
+    fi
+else
+    # This is safer to use most of the time because it'll keep files
+    # on the backup even when they no longer exist on the source.
 
-# rsync --recursive --times --delete-during --force /mnt/user/ /mnt/backup/
+    if ! rsync --recursive --times /mnt/user/ /mnt/backup/; then
+        echo
+        echo "*** ERROR: Backup failed"
+        echo
+        exit 1
+    fi
+fi
 
 # Unmount the backup drives.
 
 umount /mnt/backup
+
+# Restart the Docker apps.
+
+echo "Starting apps..."
+docker start $dataApps
 
 echo
 echo "*** Backup Complete ***"
