@@ -466,23 +466,26 @@ if ! mergerfs -o "category.create=mfs" "$backupDrive0;$backupDrive1" /mnt/backup
     exit 1
 fi
 
-# Use [rsync] to backup [main-storage] to the backup drives.
+# Use [rsync] to backup [/mnt/user] to the backup drives.  We're 
+# backing up this instead of [/mnt/main-storage] so we'll pick
+# up things like the [system] folder.
 #
 # Useful Options:
 #
-#   --times             - preserve file modification times
 #   --delete-during     - delete extraneous files from target
+#   --recursive         - copy subfolders too
 #   --force             - force deletion of dirs even if not empty
+#   --times             - preserve file modification times
 
 # This is safer to use most of the time because it'll keep files
 # on the backup even when they no longer exist on the source.
 
-rsync --times /mnt/main-storage/ /mnt/backup/
+rsync --recursive --times /mnt/user/ /mnt/backup/
 
 # Use this occasionally to clear extranious files and folders
 # from the backup.
 
-# rsync --times --delete-during --force /mnt/main-storage/ /mnt/backup/
+# rsync --recursive --times --delete-during --force /mnt/user/ /mnt/backup/
 
 # Unmount the backup drives.
 
