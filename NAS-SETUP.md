@@ -381,14 +381,16 @@ https://forums.unraid.net/profile/1033-pauven/
   /dev/nvme2n1p128: PARTUUID="99009e79-d999-a659-32e5-993bfb698a80"
   ```
 
-* Scan the file for lines with **LABEL="BACKUP-0** and **LABEL="BACKUP-1** and
-  extract the disk path from the beginning of the matching lines.
+* Scan the file for lines with **LABEL="BACKUPx-0** and **LABEL="BACKUPx-1** and
+  extract the disk path from the beginning of the matching lines.  Our convention 
+  will that the **"x"** in **BACKUPx-*** refers to a backup disk set and the digit
+  after the dash specifies the disk number in th set.
 
 * Mount the disks like (using the labels to identify the drives):
 
   ```
-  mount /dev/sdf1 /mnt/backup-0
-  mount /dev/sdg1 /mnt/backup-1
+  mount /dev/sdf1 /mnt/backupx-0
+  mount /dev/sdg1 /mnt/backupx-1
   ```
 
 * Copy the files being backed up.
@@ -434,26 +436,40 @@ fi
 echo "Stopping storage apps..."
 docker stop checkrr info plex
 
-# Use [blkid] to list the attached block devices, looking for the BACKUP-*
+# Use [blkid] to list the attached block devices, looking for the BACKUP#-#
 # drive labels and extract the device path at the beginning of the lines.
 # Matching lines will look something like:
 #
-# /dev/sdc1: LABEL="BACKUP-0" UUID="18338773625610573138" UUID_SUB="17752503991717505069" BLOCK_SIZE="4096" TYPE="vfat" PARTUUID="8b21e298-063c-4b27-86d0-2985beca9928"
+# /dev/sdc1: LABEL="BACKUP0-0" UUID="18338773625610573138" UUID_SUB="17752503991717505069" BLOCK_SIZE="4096" TYPE="vfat" PARTUUID="8b21e298-063c-4b27-86d0-2985beca9928"
 # ...
+#
+# NOTE: The first digit in the drive labels specifies the backup disk set
+#       and the second digit identifies the disk in the set.
 
-$backupDrive0 = $(blkid | grep BACKUP-0 | grep -o '^[^:]')
-$backupDrive1 = $(blkid | grep BACKUP-1 | grep -o '^[^:]')
+$backupDrive0 = $(blkid | grep BACKUP\d-0 | grep -o '^[^:]')
+$backupDrive1 = $(blkid | grep BACKUP\d-1 | grep -o '^[^:]')
 
 if [[ -z "$$backupDrive0 ]]; then
-    echo "*** ERROR: Cannot locate BACKUP-0 external USB drive."
+    echo "*** ERROR: Cannot locate BACKUP#-0 external USB drive."
     echo "***        Plug this into one of the USB 3.2 ports.
     echo
     exit 1
 fi
 
 if [[ -z "$$backupDrive1 ]]; then
-    echo "*** ERROR: Cannot locate BACKUP-1 external USB drive."
+    echo "*** ERROR: Cannot locate BACKUP#-1 external USB drive."
     echo "***        Plug this into one of the USB 3.2 ports.
+    echo
+    exit 1
+fi
+
+# Verify that the backup drives are from the same backup set.
+
+drive0backupSet=${backupDrive0:0:7}
+drive1backupSet=${backupDrive1:0:7}
+
+if [[ "$drive0backupSet" != "$drive1backupSet" ]]; then
+    echo "*** ERROR: Drives are not from the same backup set: $backupDrive0, $backupDrive1
     echo
     exit 1
 fi
