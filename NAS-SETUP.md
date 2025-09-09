@@ -199,6 +199,17 @@ original UGREEN OS counts as one).
           formatter: default
       ```
 
+    **NOTE:** I was able to get hardware acceleration going in the scan
+    on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
+    than just using the CPU, so this is disabled by default.
+
+    You can enable HW acceleration by uncommeting this line
+    in the [checkrr.yaml] config file.
+
+    ```
+    #ffmpegArgs: "-hwaccel vaapi"
+    ```
+
 21. Install the **Disk Location** app and then goto 
     **Tools/Dish Location** to configure it.  I configured
     2 row and 4 columns formatted as 300x150px with the
@@ -231,15 +242,6 @@ original UGREEN OS counts as one).
     d. Restart the **NoIP** app.
 
 23. Install the **User Scripts** and **Enhanced User Scripts** plugins.
-
-NOTE: I was able to get hardware acceleration going in the scan
-      on my DXP4800 Plus but doing that was actually THREE TIMES SLOWER
-      than just using the CPU, so this is disabled by default.
-
-      You can enable HW acceleration by uncommeting this line
-      in the [checkrr.yaml] config file.
-
-      # ffmpegArgs: "-hwaccel vaapi"
 
 24. Configure the **video-capture** user and share.
 
@@ -343,3 +345,152 @@ NOTE: I was able to get hardware acceleration going in the scan
     drive and I've heard this might make the USB drive more
     reliable.
  
+===========================================================================
+Backup script notes
+
+https://forums.unraid.net/profile/1033-pauven/
+
+* Install the **mergerFS for UNRAID** plug-in
+
+* Format the drives as **exFAT (FAT64)**
+
+* Label the drives **BACKUP-0** and **BACKUP-1**
+
+* Connect the drives to the USB 3.2 ports and then use **blkid** to list
+  the block devices like:
+
+  ```
+  /dev/sda1: LABEL_FATBOOT="UNRAID" LABEL="UNRAID" UUID="130B-130E" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="fd37e730-01"
+  /dev/loop1: BLOCK_SIZE="131072" TYPE="squashfs"
+  /dev/nvme0n1p1: UUID="31e9db7c-4d33-4959-a335-0ac9c912df1f" UUID_SUB="0ea790c4-40f4-4e18-a780-3ce50ac89e97" BLOCK_SIZE="4096" TYPE="btrfs"
+  /dev/sdd1: LABEL="main-storage" UUID="18338773625610573138" UUID_SUB="15745215116711571004" BLOCK_SIZE="4096" TYPE="zfs_member" PARTUUID="1422c1d3-b4d9-401e-bbd3-060002df010f"
+  /dev/sdb1: LABEL="main-storage" UUID="18338773625610573138" UUID_SUB="9591938035247704645" BLOCK_SIZE="4096" TYPE="zfs_member" PARTUUID="27b1a478-2ccc-4514-8ebf-5e394331ca33"
+  /dev/nvme2n1p6: LABEL="UGREEN-SERVICE" UUID="a2f6723b-d58b-4266-a63c-28d99d9efb91" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="44837071-b6e8-aa4f-b98f-6b0204f00fe1"
+  /dev/nvme2n1p4: LABEL="rootfs2" UUID="2cf7b686-078f-4d79-a2ca-923916071584" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="d9c12fe3-3a07-f941-8e5e-8ab9b85b824b"
+  /dev/nvme2n1p2: BLOCK_SIZE="262144" TYPE="squashfs" PARTUUID="99009e79-d999-a659-32e5-993bfb698a02"
+  /dev/nvme2n1p7: LABEL="USER-DATA" UUID="af175c65-cbf3-4148-891f-b853586a1db1" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="63acc8e2-965c-9648-a750-65781a621d7d"
+  /dev/nvme2n1p5: LABEL="ugswap" UUID="b2ab99eb-e38a-4a2a-87e8-dbce9ebdf49e" TYPE="swap" PARTUUID="37ab82bc-0933-df46-9435-0ab8196dbdba"
+  /dev/nvme2n1p3: LABEL="factory" UUID="e29eec30-01e3-4d97-8dd2-83a9aae69554" BLOCK_SIZE="1024" TYPE="ext4" PARTUUID="923dd0e1-76cf-7a48-bbe5-ada909ffd91a"
+  /dev/nvme2n1p1: SEC_TYPE="msdos" LABEL_FATBOOT="kernel" LABEL="kernel" UUID="1234-ABCD" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="99009e79-d999-a659-32e5-993bfb698a01"
+  /dev/loop0: BLOCK_SIZE="131072" TYPE="squashfs"
+  /dev/sde1: LABEL="main-storage" UUID="18338773625610573138" UUID_SUB="1596818472322638747" BLOCK_SIZE="4096" TYPE="zfs_member" PARTUUID="08a8a5d8-35f6-404d-b21d-aa0f33f488bc"
+  /dev/sdc1: LABEL="main-storage" UUID="18338773625610573138" UUID_SUB="17752503991717505069" BLOCK_SIZE="4096" TYPE="zfs_member" PARTUUID="8b21e298-063c-4b27-86d0-2985beca9928"
+  /dev/nvme1n1p1: UUID="31e9db7c-4d33-4959-a335-0ac9c912df1f" UUID_SUB="ce27fe56-26a3-4299-8485-8751fdcfe0a0" BLOCK_SIZE="4096" TYPE="btrfs"
+  /dev/sdf1: LABEL="WINDOWS10" UUID="6294-0B9A" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="f6f6d5d7-01"
+  /dev/loop2: UUID="c35448fa-941b-4d83-a09c-20f4bce5215f" UUID_SUB="5ad39219-1138-475c-887d-00619de42f35" BLOCK_SIZE="4096" TYPE="btrfs"
+  /dev/nvme2n1p128: PARTUUID="99009e79-d999-a659-32e5-993bfb698a80"
+  ```
+
+* Scan the file for lines with **LABEL="BACKUP-0** and **LABEL="BACKUP-1** and
+  extract the disk path from the beginning of the matching lines.
+
+* Mount the disks like (using the labels to identify the drives):
+
+  ```
+  mount /dev/sdf1 /mnt/backup-0
+  mount /dev/sdg1 /mnt/backup-1
+  ```
+
+* Copy the files being backed up.
+
+* Unmount the drives like:
+
+  ```
+  unmount /mnt/backup-0
+  unmount /mnt/backup-1
+  ```
+
+* Backup script will look something like:
+
+```
+#!/bin/bash
+echo "====================================================================="
+echo "UGREEN-NAS Backup Script"
+echo 
+echo " REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
+echo "           on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
+echo "           BACKUP-0 and BACKUP-1."
+echo
+echo "           [mergerFS for UNRAID] must be installed on the NAS."
+echo
+echo "           Stop all apps that access [main-storage]"
+echo 
+echo " Press ENTER to proceed with the backup or CTRL-C to cancel..."
+echo 
+
+read
+echo 
+
+# Check for: mergerfs 
+
+if ! which mergerfs > /dev/null 2>&1 ; then
+    echo "** ERROR: [mergerFS for UNRAID] app plugin is required."
+    echo
+    exit 1
+fi
+
+# Make sure the apps that directly access [main-storage] are stopped.
+
+echo "Stopping storage apps..."
+docker stop checkrr info plex
+
+# Use [blkid] to list the attached block devices, looking for the BACKUP-*
+# drive labels and extract the device path at the beginning of the lines.
+# Matching lines will look something like:
+#
+# /dev/sdc1: LABEL="BACKUP-0" UUID="18338773625610573138" UUID_SUB="17752503991717505069" BLOCK_SIZE="4096" TYPE="vfat" PARTUUID="8b21e298-063c-4b27-86d0-2985beca9928"
+# ...
+
+$backupDrive0 = $(blkid | grep BACKUP-0 | grep -o '^[^:]')
+$backupDrive1 = $(blkid | grep BACKUP-1 | grep -o '^[^:]')
+
+if [[ -z "$$backupDrive0 ]]; then
+    echo "*** ERROR: Cannot locate BACKUP-0 external USB drive."
+    echo "***        Plug this into one of the USB 3.2 ports.
+    echo
+    exit 1
+fi
+
+if [[ -z "$$backupDrive1 ]]; then
+    echo "*** ERROR: Cannot locate BACKUP-1 external USB drive."
+    echo "***        Plug this into one of the USB 3.2 ports.
+    echo
+    exit 1
+fi
+
+# Mount the two drives at: /mnt/backup
+
+if ! mergerfs -o "category.create=mfs" "$backupDrive0;$backupDrive1" /mnt/backup; then
+    echo "*** ERROR: Cannot mount backup drives."
+    echo
+    exit 1
+fi
+
+# Use [rsync] to backup [main-storage] to the backup drives.
+#
+# Useful Options:
+#
+#   --times             - preserve file modification times
+#   --delete-during     - delete extraneous files from target
+#   --force             - force deletion of dirs even if not empty
+
+# This is safer to use most of the time because it'll keep files
+# on the backup even when they no longer exist on the source.
+
+rsync --times /mnt/main-storage/ /mnt/backup/
+
+# Use this occasionally to clear extranious files and folders
+# from the backup.
+
+# rsync --times --delete-during --force /mnt/main-storage/ /mnt/backup/
+
+# Unmount the backup drives.
+
+umount /mnt/backup
+
+echo
+echo "*** Backup Complete ***"
+echo
+
+exit 0
+```
