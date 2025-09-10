@@ -412,7 +412,7 @@ echo "DESCRIPTION: UNRAID NAS Backup Script"
 echo "FILE:        /boot/config/plugins/user.scripts/scripts/nas-backup/script"
 echo
 echo "USAGE     nas-backup          - KEEPS extraneous files in backup set"
-echo "          nas-backup clean    - REMOVES extraneous files from backup set"
+echo "          nas-backup --clean  - REMOVES extraneous files from backup set"
 echo 
 echo "REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
 echo "          on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
@@ -424,6 +424,14 @@ echo "          Stop all apps that access [main-storage]"
 echo "====================================================================="
 echo "Press ENTER to proceed with the backup or CTRL-C to cancel..."
 read
+
+# Process command line options.
+
+if [[ "$1" == "--clean" ]]; then
+    clean=$true
+else
+    clean=$false
+fi
 
 # Check for: mergerfs 
 
@@ -606,13 +614,15 @@ exit 0
 #   --force             - force deletion of dirs even if not empty
 #   --times             - preserve file modification times
 
-# This is safer to use most of the time because it'll keep files
-# on the backup even when they no longer exist on the source.
+# By default, this script won't remove extranious files on the target when they
+# don't exist on the source.  This is a safety thing to prevent the loss of 
+# backed up files due to mistakes or corruption in the source (this happened
+# to me before I had a NAS).
+#
+# Use the "--clean"" option to remove extranious files on the target.
+# from the backup.
 
-if [[ "$1" == "clean" ]; then
-    # Use this occasionally to clear extranious files and folders
-    # from the backup.
-
+if $clean; then
     echo
     echo "backing up (CLEAN)..."
 
