@@ -17,12 +17,32 @@ echo "====================================================================="
 echo "Press ENTER to proceed with the backup or CTRL-C to cancel..."
 read
 
+#------------------------------------------------------------------------------
+# UnmountIfMounted: 
+#
+# Unmounts the file system at the path passed if something is mounted there.
+
+function UnmountIfMounted()
+{
+    mountPath=$1
+
+    # NOTE: The space at the end of the grep expression is important!
+
+    if $(mount | grep -q "on $mountPath "); then
+        echo "Unmount: $mountPath"
+        umount $mountPath
+    fi
+}
+
+#------------------------------------------------------------------------------
+# Script Entrypoint
+
 # Process command line options.
 
 if [[ "$1" == "--clean" ]]; then
-    clean=$true
+    clean=true
 else
-    clean=$false
+    clean=false
 fi
 
 # Check for: mergerfs 
@@ -84,6 +104,21 @@ if [ -z "$backupDrive1" ]; then
     exit 1
 fi
 
+# Get the system into a known state where all of the backup related
+# mountpoints are unmounted.  Here are tbebackup mountpoints:
+
+driveCheckMount=/tmp/drive-check
+driveMount0=/tmp/backup-drive0
+driveMount1=/tmp/backup-drive1
+backupMount=/tmp/backup
+
+echo "Putting backup mounts into a known (unmounted) state"
+
+UnmountIfMounted $driveCheckMount
+UnmountIfMounted $driveMount0
+UnmountIfMounted $driveMount1
+UnmountIfMounted $backupMount
+
 # Verify that the backup drives are from the same backup set.
 
 echo
@@ -111,14 +146,7 @@ docker stop $dataApps
 # folder if present.  It looks like Windows creates this when it
 # formats drives.
 
-driveCheckMount=/tmp/drive-check
-
 # Check: drive 0
-
-if $(mount | grep -q "on $driveCheckMount "); then  # NOTE: The space at the end is important!
-    echo "Unmount existing: $driveCheckMount"
-    umount $driveCheckMount
-fi
 
 if [ ! -d $driveCheckMount ]; then
     echo "Create: $driveCheckMount"
@@ -147,10 +175,6 @@ umount $driveCheckMount
 # drives at [/tmp/backup-drive0] and [/tmp/backup-drive1] and the merged 
 # file system at [/tmp/backup].
 
-driveMount0=/tmp/backup-drive0
-driveMount1=/tmp/backup-drive1
-backupMount=/tmp/backup
-
 echo
 echo "Mounting drives via [mergerfs] at: $backupMount"
 
@@ -161,29 +185,13 @@ if [ ! -d $backupMount ]; then
     mkdir -p $backupMount
 fi
 
-# Unmount any existing backup mount.
-
-if $(mount | grep -q "on $backupMount "); then  # NOTE: The space at the end is important!
-    echo "Unmount existing: $backupMount/"
-    umount $backupMount
-fi
-
 # Mount the backup drives and then the mergerFS file system.
 
-echo "*** driveMount0=$driveMount0"
-echo "*** driveMount1=$driveMount1"
-echo "*** backupMount=$backupMount"
-echo "*** mount [$backupDrive0] [$driveMount0]"
-echo "*** mount [$backupDrive1] [$driveMount1]"
-
 mkdir -p $driveMount0
-mount #!/bin/bash
+mount $backupDrive0 $driveMount0
 
 mkdir -p $driveMount1
 mount $backupDrive1 $driveMount1
-
-echo mergerfs -o "category.create=mfs" "$driveMount0:$driveMount1" $backupMount
-exit 0
 
 if ! mergerfs -o "category.create=mfs" "$driveMount0:$driveMount1" $backupMount; then
     echo                                          >&2
@@ -218,19 +226,15 @@ fi
 echo
 echo "Backup target: $backupMount"
 
-#################################################################################
-echo cp -r /mnt/user/new $backupMount
-# cp -r /mnt/user/new $backupMount
-#################################################################################
+if ! rsync $cleanOptions --recursive --times /mnt/user/ $backupMount/; then
+    echo                                              >&2
+    echo "*** ERROR: Backup was cancelled or failed." >&2
+    echo                                              >&2
+    exit 1
+fi
 
-# if ! rsync $cleanOptions --recursive --times /mnt/user/ $backupMount/; then
-#    echo                            >&2
-#    echo "*** ERROR: Backup failed" >&2
-#    echo                            >&2
-#    exit 1
-# fi
-
-# Unmount the backup drives.
+# Unmount the backup drives so cached data will be flushed
+# and the drives will be able to idle out and spin down.
 
 umount $driveMount0
 umount $driveMount1
@@ -238,12 +242,12 @@ umount $backupMount
 
 # Restart the Docker apps.
 
-echo "Starting apps..."
+echo "Restarting apps..."
 docker start $dataApps
 
 echo
-echo "************************"
+echo "***********************"
 echo "*** Backup Complete ***"
-echo "************************"
+echo "***********************"
 echo
 exit 0
