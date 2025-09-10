@@ -406,41 +406,37 @@ https://forums.unraid.net/profile/1033-pauven/
 
 ```
 #!/bin/bash
+#!/bin/bash
 echo "====================================================================="
-echo "FILE:        nas-backup"
 echo "DESCRIPTION: UNRAID NAS Backup Script"
+echo "FILE:        /boot/config/plugins/user.scripts/scripts/nas-backup/script"
 echo
-echo "    USAGE: nas-backup        - KEEPS extraneous files in backup set"
-echi "           nas-backup clean  - REMOVES extraneous files from backup set"
+echo "USAGE     nas-backup          - KEEPS extraneous files in backup set"
+echo "          nas-backup clean    - REMOVES extraneous files from backup set"
 echo 
-echo "    REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
-echo "              on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
-echo "              BACKUP-0 and BACKUP-1."
+echo "REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
+echo "          on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
+echo "          BACKUP-0 and BACKUP-1."
 echo
-echo "              [mergerFS for UNRAID] must be installed on the NAS."
+echo "          [mergerFS for UNRAID] must be installed on the NAS."
 echo
-echo "              Stop all apps that access [main-storage]"
-echo 
-echo " Press ENTER to proceed with the backup or CTRL-C to cancel..."
-echo 
-
+echo "          Stop all apps that access [main-storage]"
+echo "====================================================================="
+echo "Press ENTER to proceed with the backup or CTRL-C to cancel..."
 read
-echo 
 
 # Check for: mergerfs 
 
+echo "Checking: mergerfs"
+
 if ! which mergerfs > /dev/null 2>&1 ; then
-    echo "** ERROR: [mergerFS for UNRAID] app plugin is required."
-    echo
+    echo                                                           >&2
+    echo "** ERROR: [mergerFS for UNRAID] app plugin is required." >&2 
+    echo                                                           >&2
     exit 1
 fi
 
-# Make sure the apps manage data at [/mnt/user] are stopped.
-
-dataApps=checkrr info plex
-
-echo "Stopping apps..."
-docker stop $dataApps
+echo "    mergerfs is installed"
 
 # Use [blkid] to list the attached block devices, looking for the BACKUP#-#
 # drive labels and extract the device path at the beginning of the lines.
@@ -452,41 +448,152 @@ docker stop $dataApps
 # NOTE: The first digit in the drive labels specifies the backup disk set
 #       and the second digit identifies the disk in the set.
 
-$backupDrive0 = $(blkid | grep BACKUP\d-0 | grep -o '^[^:]')
-$backupDrive1 = $(blkid | grep BACKUP\d-1 | grep -o '^[^:]')
+echo 
+echo "Locating backup drives"
 
-if [[ -z "$$backupDrive0 ]]; then
-    echo "*** ERROR: Cannot locate BACKUP#-0 external USB drive."
-    echo "***        Plug this into one of the USB 3.2 ports.
-    echo
+backupDrive0Entry=$(blkid | grep LABEL=\"BACKUP[0-9]-0\")
+backupDrive1Entry=$(blkid | grep LABEL=\"BACKUP[0-9]-1\")
+
+backupDrive0Label=$(echo $backupDrive0Entry | grep -o "LABEL=\"BACKUP[0-9]-0\"")
+backupDrive0Label=${backupDrive0Label:7:9}
+
+backupDrive1Label=$(echo $backupDrive1Entry | grep -o "LABEL=\"BACKUP[0-9]-1\"")
+backupDrive1Label=${backupDrive1Label:7:9}
+
+backupDevice0=$(echo $backupDrive0Entry | grep -o '^[^:]*')
+backupDevice1=$(echo $backupDrive1Entry | grep -o '^[^:]*')
+
+echo "    Backup Drives:"
+echo "    --------------------------------"
+echo "    - $backupDrive0Label: $backupDevice0"
+echo "    - $backupDrive1Label: $backupDevice1"
+
+if [ -z "$backupDevice0" ]; then
+    echo                                                          >&2
+    echo "*** ERROR: Cannot locate BACKUP#-0 external USB drive." >&2
+    echo "***        Plug this into one of the USB 3.2 ports."    >&2
+    echo                                                          >&2
     exit 1
 fi
 
-if [[ -z "$$backupDrive1 ]]; then
-    echo "*** ERROR: Cannot locate BACKUP#-1 external USB drive."
-    echo "***        Plug this into one of the USB 3.2 ports.
-    echo
+if [ -z "$backupDevice1" ]; then
+    echo                                                          >&2
+    echo "*** ERROR: Cannot locate BACKUP#-1 external USB drive." >&2
+    echo "***        Plug this into one of the USB 3.2 ports."    >&2
+    echo                                                          >&2
     exit 1
 fi
 
 # Verify that the backup drives are from the same backup set.
 
-drive0backupSet=${backupDrive0:0:7}
-drive1backupSet=${backupDrive1:0:7}
+echo
+echo "Checking backup set"
 
-if [[ "$drive0backupSet" != "$drive1backupSet" ]]; then
-    echo "*** ERROR: Drives are not from the same backup set: $backupDrive0, $backupDrive1
-    echo
+drive0BackupSet=${backupDrive0Label:0:7}
+drive1BackupSet=${backupDrive1Label:0:7}
+
+if [[ $drive0BackupSet != $drive1BackupSet ]]; then
+    echo                                                                                             >&2
+    echo "*** ERROR: Drives are not for the same backup set: $backupDrive0Label, $backupDrive1Label" >&2
+    echo                                                                                             >&2
     exit 1
 fi
 
-# Mount the two drives at: /mnt/backup
+# Make sure the apps that manage data at [/mnt/user] are stopped.
 
-if ! mergerfs -o "category.create=mfs" "$backupDrive0;$backupDrive1" /mnt/backup; then
-    echo "*** ERROR: Cannot mount backup drives."
-    echo
+dataApps="checkrr info plex"
+
+echo
+echo "Stopping apps..."
+docker stop $dataApps
+
+# Mount the drives individually remove the [System Volume Information]
+# folder if present.  It looks like Windows creates this when it
+# formats drives.
+
+driveCheckMount=/tmp/drive-check
+
+# Check: drive 0
+
+if $(mount | grep -q "on $driveCheckMount"); then
+    echo "Unmount existing: $driveCheckMount"
+    unmount $driveCheckMount
+fi
+
+if [ ! -d $driveCheckMount ]; then
+    echo "Create: $driveCheckMount"
+    mkdir /tmp/drive-check
+fi
+
+mount $backupDevice0 $driveCheckMount
+
+if [ -d "$driveCheckMount/System Volume Information" ]; then
+    echo "Remove: $driveCheckMount/System Volume Information"
+    rm -r "$driveCheckMount/System Volume Information"
+fi
+
+# Check: drive 1
+
+mount $backupDevice1 $driveCheckMount
+
+if [ -d "$driveCheckMount/System Volume Information" ]; then
+    echo "Remove: $driveCheckMount/System Volume Information"
+    rm -r "$driveCheckMount/System Volume Information"
+fi
+
+umount $driveCheckMount
+rm -r $driveCheckMount
+
+# Mount the two drives at with mergerfs.  We're going to mount the backup
+# drives at [/tmp/backup-drive0] and [/tmp/backup-drive1] and the merged 
+# file system at [/tmp/backup].
+
+driveMount0=/tmp/backup-drive0
+driveMount1=/tmp/backup-drive1
+backupMount=/tmp/backup
+
+echo
+echo "Mounting drives via [mergerfs] at: $backupMount"
+
+# Create the backup folder if it doesn't already exist.
+
+if [ ! -d $backupMount ]; then
+    echo "Creating: $backupMount"
+    mkdir -p $backupMount
+fi
+
+# Unmount any existing backup mount.
+
+if $(mount | grep -q "on $backupMount"); then
+    echo "Unmount existing: $backupMount/"
+    unmount $backupMount
+fi
+
+# Mount the backup drives and then the mergerFS file system.
+
+mkdir -p $driveMount0
+mount $backupDrive0 $driveMount0
+
+mkdir -p $drive1Mount
+mount $backupDrive1 $driveMount1
+
+###################################################################################
+echo mergerfs "$drive0Mount:$drive1Mount" $backupMount \
+    -o cache.files=partial \
+    -o category.create=mfs \
+    -o dropcacheonclose=true
+
+exit 0
+###################################################################################
+
+if ! mergerfs -o "category.create=mfs" "$drive0Mount:$drive1Mount" $backupMount; then
+    echo                                          >&2
+    echo "*** ERROR: Cannot mount backup drives." >&2
+    echo                                          >&2
     exit 1
 fi
+
+exit 0
 
 # Use [rsync] to backup [/mnt/user] to the backup drives.  We're 
 # backing up this instead of [/mnt/main-storage] so we'll pick
@@ -506,27 +613,40 @@ if [[ "$1" == "clean" ]; then
     # Use this occasionally to clear extranious files and folders
     # from the backup.
 
-    if ! rsync --delete-during --force ---recursive --times /mnt/user/ /mnt/backup/
-        echo
-        echo "*** ERROR: Backup failed"
-        echo
+    echo
+    echo "backing up (CLEAN)..."
+
+    if ! rsync --delete-during --force ---recursive --times /mnt/user/ $backupMount/
+        echo                            >&2
+        echo "*** ERROR: Backup failed" >&2
+        echo                            >&2
         exit 1
     fi
 else
     # This is safer to use most of the time because it'll keep files
     # on the backup even when they no longer exist on the source.
 
-    if ! rsync --recursive --times /mnt/user/ /mnt/backup/; then
-        echo
-        echo "*** ERROR: Backup failed"
-        echo
+    echo
+    echo "backing up..."
+
+    if ! rsync --recursive --times /mnt/user/ $backupMount/; then
+        echo                            >&2
+        echo "*** ERROR: Backup failed" >&2
+        echo                            >&2
         exit 1
     fi
 fi
 
 # Unmount the backup drives.
 
-umount /mnt/backup
+umount $driveMount0
+rm -r $driveMount0
+
+umount $driveMount1
+rm -r $driveMount1
+
+umount $backupMount
+rm -r $backupMount
 
 # Restart the Docker apps.
 
@@ -534,8 +654,9 @@ echo "Starting apps..."
 docker start $dataApps
 
 echo
+echo "************************"
 echo "*** Backup Complete ***"
+echo "************************"
 echo
-
 exit 0
 ```
