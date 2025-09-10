@@ -3,6 +3,8 @@ echo "====================================================================="
 echo "DESCRIPTION: UNRAID NAS Backup Script"
 echo "FILE:        /boot/config/plugins/user.scripts/scripts/nas-backup/script"
 echo
+echo "ARGUMENTS:   --no-pause   - don't prompt to continue"
+echo
 echo "USAGE     nas-backup          - KEEPS extraneous files in backup set"
 echo "          nas-backup --clean  - REMOVES extraneous files from backup set"
 echo 
@@ -10,21 +12,17 @@ echo "REQUIRED: (2) external 30GB USB drives connected to the USB 3.2 ports"
 echo "          on the NAS.  These must be formatted as exFAT (FAT64) and labeled"
 echo "          BACKUP-0 and BACKUP-1."
 echo
-echo "          [mergerFS for UNRAID] must be installed on the NAS."
-echo
-echo "          Stop all apps that access [main-storage]"
+echo "          [mergerFS for UNRAID] must be installed."
 echo "====================================================================="
-echo "Press ENTER to proceed with the backup or CTRL-C to cancel..."
-read
 
 #------------------------------------------------------------------------------
-# UnmountIfMounted: 
+# FUNCTION: UnmountIfMounted(mountPath) 
 #
 # Unmounts the file system at the path passed if something is mounted there.
 
 function UnmountIfMounted()
 {
-    mountPath=$1
+    local mountPath=$1
 
     # NOTE: The space at the end of the grep expression is important!
 
@@ -35,14 +33,57 @@ function UnmountIfMounted()
 }
 
 #------------------------------------------------------------------------------
+# FUNCTION: HumanizeSeconds(seconds)
+# RETURNS:  $humanSeconds
+#
+# Formats the seconds argument into a nice human readable.
+
+function HumanizeSeconds()
+{
+    local seconds=$1
+
+    local days=$((SECONDS/60/60/24))
+    local bours=$((SECONDS/60/60%24))
+    local minutes=$((SECONDS/60%60))
+    local seconds=$((SECONDS%60))
+
+    printf -v humanSeconds "%02d %02d:%02d:%02d" $days $hours $minutes $seconds
+}
+
+#------------------------------------------------------------------------------
 # Script Entrypoint
 
 # Process command line options.
 
-if [[ "$1" == "--clean" ]]; then
-    clean=true
-else
-    clean=false
+clean=false
+noPrompt=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --clean)
+            clean=true
+            ;;
+        --no-prompt)
+            noPrompt=true
+            ;;
+        *)
+            echo "***ERROR: Unknown option: $1" >&2
+            exit 1
+      ;;
+  esac
+  shift 1
+done
+
+echo "--clean:     $clean"
+echo "--no-prompt: $noPrompt"
+
+# Prompt the user to confirm when things are ready.
+
+if ! $noPrompt; then
+    echo "This would be a good time to run the MOVER if required."
+    echo
+    echo "Press ENTER to proceed with the backup or CTRL-C to cancel..."
+    read
 fi
 
 # Check for: mergerfs 
@@ -85,8 +126,8 @@ backupDrive1=$(echo $backupDrive1Entry | grep -o '^[^:]*')
 
 echo "    Backup Drives:"
 echo "    --------------------------------"
-echo "    - $backupDrive0Label: $backupDrive0"
-echo "    - $backupDrive1Label: $backupDrive1"
+echo "    $backupDrive0Label: $backupDrive0"
+echo "    $backupDrive1Label: $backupDrive1"
 
 if [ -z "$backupDrive0" ]; then
     echo                                                          >&2
@@ -112,6 +153,7 @@ driveMount0=/tmp/backup-drive0
 driveMount1=/tmp/backup-drive1
 backupMount=/tmp/backup
 
+echo
 echo "Putting backup mounts into a known (unmounted) state"
 
 UnmountIfMounted $driveCheckMount
@@ -134,12 +176,15 @@ if [[ $drive0BackupSet != $drive1BackupSet ]]; then
     exit 1
 fi
 
+echo "   Backup set: OK"
+
 # Make sure the apps that manage data at [/mnt/user] are stopped.
 
 dataApps="checkrr info plex"
 
 echo
 echo "Stopping apps..."
+echo "----------------"
 docker stop $dataApps
 
 # Mount the drives individually remove the and [System Volume Information]
@@ -200,9 +245,9 @@ if ! mergerfs -o "category.create=mfs" "$driveMount0:$driveMount1" $backupMount;
     exit 1
 fi
 
-# Use [rsync] to backup [/mnt/user] to the backup drives.  We're 
-# backing up this instead of [/mnt/main-storage] so we'll pick
-# up things frome the [cache] and [system] folder.
+# Use [rsync] to backup [/mnt/main-storage] to the backup drives. 
+# We're  backing up this instead of [/mnt/user] because we don't
+# want to copy the [system] folder.
 #
 # Useful Options:
 #
@@ -226,10 +271,18 @@ fi
 echo
 echo "Backup target: $backupMount"
 
-if ! rsync $cleanOptions --recursive --times /mnt/user/ $backupMount/; then
-    echo                                              >&2
-    echo "*** ERROR: Backup was cancelled or failed." >&2
-    echo                                              >&2
+if ! rsync $cleanOptions --recursive --times --progress /mnt/user/ $backupMount/; then
+
+    # Convert the the script run time into a nice string.
+
+    HumanizeSeconds $SECONDS # --> $humanSeconds
+    
+    echo                                            >&2
+    echo "****************************************" >&2
+    echo "* ERROR: Backup was cancelled or failed." >&2
+    echo "* Elapsed Time: $humanSeconds"
+    echo "****************************************" >&2
+    echo                                            >&2
     exit 1
 fi
 
@@ -245,9 +298,14 @@ umount $backupMount
 echo "Restarting apps..."
 docker start $dataApps
 
+# Convert the the script run time into a nice string.
+
+HumanizeSeconds $SECONDS # --> $humanSeconds
+
 echo
-echo "***********************"
-echo "*** Backup Complete ***"
-echo "***********************"
+echo "***************************"
+echo "* Backup Completed"
+echo "* Elapsed Time: $humanSeconds"
+echo "***************************"
 echo
 exit 0
