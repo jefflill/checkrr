@@ -10,6 +10,7 @@ checkrr:
   debug: true
   csvfile: "./badfiles.csv"
   cron: "@daily"
+  fullScan: true
   # ffmpegArgs: "-hwaccel vaapi"
   ignorehidden: true
   requireaudio: true

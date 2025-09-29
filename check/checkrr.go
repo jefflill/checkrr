@@ -33,6 +33,7 @@ type Checkrr struct {
 	Stats         features.Stats
 	DB            *bolt.DB
 	Running       bool
+	fullScan      bool				# jefflill: enables full scan of media files
 	ffmpegArgs	  string			# jefflill: used for GPU related args
 	csv           features.CSV
 	notifications notifications.Notifications
@@ -525,7 +526,8 @@ func (c *Checkrr) checkFile(path string) {
 			}
 
 			//----------------------------------------------------------------------------
-			// jefflill: Have [ffmpeg] do a deep scan of video/audio files for corruption.
+			// jefflill: Have [ffmpeg] do a deep scan of video/audio files for corruption
+			//           when [fullScan==true].
 			//
 			// I experimented with hardware acceleration on the UGREEN box using vaapi
 			// and it used the GPU, but that was actually THREE TIMES SLOWER!  Here's
@@ -538,12 +540,15 @@ func (c *Checkrr) checkFile(path string) {
 			//
 			// 		ffmpegArgs: "-hwaccel vaapi"
 
-			stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error %s -i '%s' -f null -",  c.ffmpegArgs, path))
-			c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Deep Scan"}).Debug(stdout)
-			if err != nil {
+			if c.fullScan {
 
-				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Failure"}).Warn(stderr)
-				return
+				stdout, stderr, err := Shellout(fmt.Sprintf("ffmpeg -v error %s -i '%s' -f null -",  c.ffmpegArgs, path))
+				c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Deep Scan"}).Debug(stdout)
+				if err != nil {
+
+					c.Logger.WithFields(log.Fields{"Format": data.Format.FormatLongName, "Type": detectedFileType, "FFProbe": true, "FFMPEG": "Failure"}).Warn(stderr)
+					return
+				}
 			}
 
 			//----------------------------------------------------------------------------
